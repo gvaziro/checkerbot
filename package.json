@@ -1,0 +1,19 @@
+{
+  "name": "sorsatgchecker",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/bot.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "dayjs": "^1.11.19",
+    "dotenv": "^17.2.3",
+    "telegraf": "^4.16.3"
+  }
+}
