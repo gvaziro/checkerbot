@@ -7,6 +7,7 @@ class TweetScoutService {
     this.baseUrl = 'https://api.tweetscout.io/v2';
     this.client = axios.create({
       baseURL: this.baseUrl,
+      timeout: 15000, // 15 seconds timeout to prevent hanging
       headers: {
         'Accept': 'application/json',
         'ApiKey': this.apiKey
@@ -76,59 +77,6 @@ class TweetScoutService {
       return response.data;
     } catch (error) {
       console.error(`[TweetScout] ❌ Error fetching top followers for ${handle}:`, error.message);
-      return [];
-    }
-  }
-
-  async getMentionsLastWeek(handle) {
-    let allTweets = [];
-    let nextCursor = null;
-    const oneWeekAgo = dayjs().subtract(7, 'days');
-    let page = 1;
-
-    try {
-      console.log(`[TweetScout] Fetching mentions for @${handle}...`);
-      while (true) {
-        const payload = {
-          query: `(@${handle}) -filter:replies`,
-          order: 'latest'
-        };
-        if (nextCursor) {
-          payload.next_cursor = nextCursor;
-        }
-
-        console.log(`[TweetScout]  - Requesting mentions page ${page}...`);
-        const response = await this.client.post('/search-tweets', payload);
-        const tweets = response.data.tweets || [];
-        
-        if (tweets.length === 0) {
-          console.log(`[TweetScout]  - No more mentions found.`);
-          break;
-        }
-
-        const filteredTweets = tweets.filter(tweet => {
-          const createdAt = dayjs(tweet.created_at);
-          return createdAt.isAfter(oneWeekAgo);
-        });
-
-        allTweets = allTweets.concat(filteredTweets);
-        console.log(`[TweetScout]  - Page ${page}: Found ${tweets.length} tweets, ${filteredTweets.length} within last 7 days.`);
-
-        // If some tweets in this batch are older than 7 days, we've reached the limit
-        const hasOlderTweets = tweets.some(tweet => dayjs(tweet.created_at).isBefore(oneWeekAgo));
-        if (hasOlderTweets) {
-          console.log(`[TweetScout]  - Reached tweets older than 7 days.`);
-          break;
-        }
-
-        nextCursor = response.data.next_cursor;
-        if (!nextCursor) break;
-        page++;
-      }
-      console.log(`[TweetScout] ✅ Total mentions for @${handle} in last 7 days: ${allTweets.length}`);
-      return allTweets;
-    } catch (error) {
-      console.error(`[TweetScout] ❌ Error fetching mentions for ${handle}:`, error.message);
       return [];
     }
   }
