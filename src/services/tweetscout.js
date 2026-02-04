@@ -1,5 +1,6 @@
 const axios = require('axios');
 const dayjs = require('dayjs');
+const https = require('https');
 
 class TweetScoutService {
   constructor(apiKey) {
@@ -11,7 +12,12 @@ class TweetScoutService {
       headers: {
         'Accept': 'application/json',
         'ApiKey': this.apiKey
-      }
+      },
+      httpsAgent: new https.Agent({ 
+        keepAlive: true, 
+        maxSockets: 100,
+        keepAliveMsecs: 3000
+      })
     });
   }
 
