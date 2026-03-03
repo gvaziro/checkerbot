@@ -3,8 +3,28 @@ const { Telegraf, Markup } = require('telegraf');
 const TweetScoutService = require('./services/tweetscout');
 const dayjs = require('dayjs');
 
+// Validate env vars before starting
+if (!process.env.BOTKEY || !process.env.TW_APIKEY) {
+  console.error('❌ Missing BOTKEY or TW_APIKEY in .env');
+  process.exit(1);
+}
+
+// Prevent crashes from unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[FATAL] Unhandled Rejection:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] Uncaught Exception:', err);
+  process.exit(1);
+});
+
 const bot = new Telegraf(process.env.BOTKEY);
 const tweetScout = new TweetScoutService(process.env.TW_APIKEY);
+
+bot.catch((err, ctx) => {
+  console.error(`[Bot] Error for ${ctx.updateType}:`, err.message);
+});
 
 bot.start((ctx) => {
   const startMessage = `Welcome! Just send me a Twitter or X.com link and I will gather all the stats for you 🔍\n\n` +
@@ -14,7 +34,8 @@ bot.start((ctx) => {
     `• Choose the group you want.\n\n` +
     `🔗 <a href="https://sorsa.io/api-about?utm_source=botchecker">API</a> | <a href="https://x.com/SorsaApp">X</a> | <a href="https://sorsa.io/?utm_source=botchecker">Web</a>`;
   
-  ctx.reply(startMessage, { parse_mode: 'HTML', disable_web_page_preview: true });
+  return ctx.reply(startMessage, { parse_mode: 'HTML', disable_web_page_preview: true })
+    .catch(e => console.error('[Bot] Error sending start message:', e.message));
 });
 
 // Regex for extracting handle from x.com or twitter.com links
